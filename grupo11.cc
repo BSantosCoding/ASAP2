@@ -103,6 +103,10 @@ class Graph{
                 graph->at(i).resize(n);
                 for (int j=0; j<n; j++){
                     p = new Pixel();
+                    s->addPixel(p);
+                    p->addPixel(s);
+                    t->addPixel(p);
+                    p->addPixel(t);
                     L.push_back(p);
                     graph->at(i).at(j) = p;
                 }
@@ -184,24 +188,20 @@ class Algorithm{
         cout<< "dispreso\n";
         list<Pixel*>::iterator it = u->getPixelList().begin();
         cout << u->getE();
+        cout << u->getH();
         while(u->getE()>0){
-            v = *it;
-            cout << v;
-            if (v==NULL){
-                cout<< "represo\n";
-                Relabel(u);
-                cout<< "represo\n";
-            }
-            else{
+            if (it==u->getPixelList().end()){
+                v = *it;
                 Edge* e = u->getEdgeMap()[v];
                 if(e->getValue() - e->getPf() > 0 && u->getH()==v->getH()+1){
-                    cout << "nao entra";
                     Push(u, v, e);
                 }
                 else{
-                    cout << "nao entro";
                     it++;
                 }
+            }
+            else {
+                Relabel(u);
             }
         }
         cout<< "dispreso\n";
@@ -236,7 +236,6 @@ int main(){
     vector<vector<Pixel*> >* gr = g->getGraph();
     for (int i=0; i<m;i++){
         for (int j=0; j<n; j++){
-            
                 cin >> aux;
                 (*gr)[i][j]->setP(aux);
                 e1 = new Edge(aux);
