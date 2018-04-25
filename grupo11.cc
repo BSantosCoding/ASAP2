@@ -23,8 +23,8 @@ class Pixel{
         string id = "";
     public:
         Pixel(){
-            c=-1;
-            p=-1;
+            c=0;
+            p=0;
             h=0;
             e=0;
             id="P";
@@ -185,12 +185,13 @@ class Algorithm{
     }
     void Algorithm::Discharge(Pixel* u){
         Pixel* v;
-        cout<< "dispreso\n";
         list<Pixel*>::iterator it = u->getPixelList().begin();
         cout << u->getE();
         cout << u->getH();
         while(u->getE()>0){
-            if (it==u->getPixelList().end()){
+            cout << "oi\n";
+            if (it!=u->getPixelList().end()){
+                cout << *(u->getPixelList().end()) << "\n";
                 v = *it;
                 Edge* e = u->getEdgeMap()[v];
                 if(e->getValue() - e->getPf() > 0 && u->getH()==v->getH()+1){
@@ -217,7 +218,7 @@ class Algorithm{
             int oldH = u->getH();
             cout<< "pila\n";
             Discharge(u);
-            cout<< "preso\n";
+            cout<< "sai\n";
             if (u->getH() > oldH){
                 L.erase(it);
                 L.push_front(*it);
