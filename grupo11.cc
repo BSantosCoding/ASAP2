@@ -5,6 +5,7 @@
 #include <set>
 #include <utility>
 #include <string>
+#include <map>
 
 using namespace std;
 class Edge;
@@ -13,12 +14,11 @@ class Algorithm;
 
 class Pixel{
     private:
-        int compare;
         int c;
         int p;
         int h;
         int e;
-        list<pair <Edge*,Pixel*> > edgeList;
+        map<Pixel*, Edge*> edgeMap;
         list<Pixel*> pixelList;
         string id = "";
     public:
@@ -27,20 +27,19 @@ class Pixel{
             p=-1;
             h=0;
             e=0;
+            id="P";
         }
         int getC();
         int getP();
         int getE();
         int getH();
-        int getCompare();
         string getId();
-        list<pair <Edge*,Pixel*> > getEdgeList();
+        map<Pixel*, Edge*> getEdgeMap();
         list<Pixel*> getPixelList();
         void setC(int n);
         void setP(int n);
         void setE(int n);
         void setH(int n);
-        void setCompare(int n);
         void setId(string id);
         void addEdge(Edge* edge, Pixel* pixel);
         void addPixel(Pixel* pixel);
@@ -57,14 +56,11 @@ class Pixel{
     int Pixel::getH(){
         return h;
     }
-    int Pixel::getCompare(){
-        return compare;
-    }
     string Pixel::getId(){
         return id;
     }
-    list<pair <Edge*,Pixel*> > Pixel::getEdgeList(){
-        return edgeList;
+    map<Pixel*, Edge*> Pixel::getEdgeMap(){
+        return edgeMap;
     }
     list<Pixel*> Pixel::getPixelList(){
         return pixelList;
@@ -81,38 +77,38 @@ class Pixel{
     void Pixel::setH(int n){
         h=n;
     }
-    void Pixel::setCompare(int n){
-        compare=n;
-    }
     void Pixel::setId(string id){
         id=id;
     }
     void Pixel::addEdge(Edge* edge, Pixel* pixel){
-        edgeList.push_back(make_pair(edge,pixel));
+        edgeMap[pixel]=edge;
     }
     void Pixel::addPixel(Pixel* pixel){
         pixelList.push_back(pixel);
     }
 
+Pixel* s = new Pixel();
+Pixel* t = new Pixel();
+list<Pixel*> L;
+
 class Graph{
     private:
-        vector<vector<Pixel*> > graph;
+        vector<vector<Pixel*> >* graph ;
     public:
         Graph(int n, int m){
+            graph = new vector<vector<Pixel*> >();
             Pixel* p;
-            int comparen=0;
-            graph.resize(n);
-            for (int i=0; i<n; i++){
-                graph.at(i).resize(m);
-                for (int j=0; j<m; j++){
-                    p->setCompare(comparen);
-                    comparen++;
+            graph->resize(m);
+            for (int i=0; i<m; i++){
+                graph->at(i).resize(n);
+                for (int j=0; j<n; j++){
+                    p = new Pixel();
                     L.push_back(p);
-                    graph.at(i).at(j) = p;
+                    graph->at(i).at(j) = p;
                 }
             }
         }
-        vector<vector<Pixel*> > getGraph(){
+        vector<vector<Pixel*> >* getGraph(){
             return graph;
         }
 };
@@ -149,117 +145,165 @@ class Edge{
 
 class Algorithm{
     private:
-        Pixel* current;
-        Pixel* head;
-        Pixel* neighboor;
     public:
         Algorithm(int n, int m){
             s->setH(n*m);
-            for(pair<Edge* ,Pixel* > p: s->getEdgeList()){
-                p.first->setPf(p.first->getValue());
-                p.first->setNf(-p.first->getValue());
-                p.second->setE(p.first->getValue());
-                s->setE(s->getE()-p.first->getValue());
+            for(pair<Pixel*,Edge*> p: s->getEdgeMap()){
+                p.second->setPf(p.second->getValue());
+                p.second->setNf(-p.second->getValue());
+                p.first->setE(p.second->getValue());
+                s->setE(s->getE()-p.second->getValue());
             }
         }
         void Discharge(Pixel* u);
         void Push(Pixel* u, Pixel* v, Edge* edge);
         void Relabel(Pixel* u);
-        void relabelToFront(Graph* g, Pixel* source, Pixel* sink);
+        void relabelToFront(Pixel* source, Pixel* sink);
 };
 
     void Algorithm::Push(Pixel* u, Pixel* v, Edge* edge){
-        int d = min(u->getE(), edge->getValue());
-        edge->setPf(edge->getPf()+d);
-        edge->setNf(-edge->getPf());
+        int d = min(u->getE(), edge->getValue()-edge->getPf());
+        edge->setPf(edge->getPf() + d);
+        edge->setNf(edge->getNf() - d);
         u->setE(u->getE()-d);
         v->setE(v->getE()+d);
     }
     void Algorithm::Relabel(Pixel* u){
         int minh=-1;
-        for(pair<Edge*,Pixel*> p: u->getEdgeList()){
-            if(minh=-1) minh=p.second->getH();
-            else minh=min(minh,p.second->getH());
+        for(pair<Pixel*,Edge*> p: u->getEdgeMap()){
+            if(p.second->getValue()-p.second->getPf()>0){
+                if(minh=-1) minh=p.first->getH();
+                else minh=min(minh,p.first->getH());
+                u->setH(minh + 1);
+                if (u->getH() > s->getH()) u->setId("C");
+            }
         }
     }
     void Algorithm::Discharge(Pixel* u){
         Pixel* v;
+        cout<< "dispreso\n";
+        list<Pixel*>::iterator it = u->getPixelList().begin();
+        cout << u->getE();
         while(u->getE()>0){
-            v = current;
+            v = *it;
+            cout << v;
             if (v==NULL){
+                cout<< "represo\n";
                 Relabel(u);
-                current = head;
+                cout<< "represo\n";
             }
             else{
-                Edge* e;
-                for (pair<Edge*,Pixel*> p: u->getEdgeList()){
-                    if (p.second->getCompare()==v->getCompare()){
-                        e=p.first;
-                    }
-                }
-                if(e->getValue() && u->getH()==v->getH()+1){
+                Edge* e = u->getEdgeMap()[v];
+                if(e->getValue() - e->getPf() > 0 && u->getH()==v->getH()+1){
+                    cout << "nao entra";
                     Push(u, v, e);
                 }
                 else{
-                    current=neighboor;
+                    cout << "nao entro";
+                    it++;
                 }
             }
         }
+        cout<< "dispreso\n";
     }
-    void Algorithm::relabelToFront(Graph* g, Pixel* source, Pixel* sink){
-
+    void Algorithm::relabelToFront(Pixel* source, Pixel* sink){
+        Pixel* u;
+        for(Pixel* p: L){
+            Push(s, p, s->getEdgeMap()[p]);
+        }
+        list<Pixel*>::iterator it = L.begin();
+        while(it!=L.end()){
+            u = *it;
+            int oldH = u->getH();
+            cout<< "pila\n";
+            Discharge(u);
+            cout<< "preso\n";
+            if (u->getH() > oldH){
+                L.erase(it);
+                L.push_front(*it);
+            }
+            it++;
+        }
+        cout<< "IMPORTANTEpreso\n";
     }
-
-Pixel* s = new Pixel();
-Pixel* t = new Pixel();
-list<Pixel*> L;
 
 int main(){
     int n, m, aux;
     Edge *e1, *e2;
-    cin >> n;
     cin >> m;
+    cin >> n;
     Graph* g = new Graph(n,m);
-    vector<vector<Pixel*> > gr = g->getGraph();
-    for (int i=0; i<n;i++){
-        for (int j=0; j<m; j++){
+    vector<vector<Pixel*> >* gr = g->getGraph();
+    for (int i=0; i<m;i++){
+        for (int j=0; j<n; j++){
+            
                 cin >> aux;
-                gr[i][j]->setP(aux);
+                (*gr)[i][j]->setP(aux);
                 e1 = new Edge(aux);
-                gr[i][j]->addEdge(e1, s);
-                s->addEdge(e1, gr[i][j]);
+                (*gr)[i][j]->addEdge(e1, s);
+                s->addEdge(e1, (*gr)[i][j]);
         }
     }
-    for (int i=0; i<n; i++){
-        for (int j=0; j<m; j++){
+    cout << "--1--\n";
+    for (int i=0; i<m; i++){
+        for (int j=0; j<n; j++){
                 cin >> aux;
-                gr[i][j]->setC(aux);
+                (*gr)[i][j]->setC(aux);
                 e2 = new Edge(aux);
-                gr[i][j]->addEdge(e2, t);
-                t->addEdge(e2, gr[i][j]);
+                (*gr)[i][j]->addEdge(e2, t);
+                t->addEdge(e2, (*gr)[i][j]);
         }
     }
-    for (int i=0; i<n;i++){
-        for (int j=0; j<m-1;j++){
+    cout << "--2--\n";
+    for (int i=0; i<m;i++){
+        for (int j=0; j<n-1;j++){
                 cin >>aux;
                 e1 = new Edge(aux);
-                gr[i][j]->addEdge(e1,gr[i][j+1]);
-                gr[i][j]->addPixel(gr[i][j+1]);
-                gr[i][j+1]->addEdge(e1,gr[i][j]);
-                gr[i][j+1]->addPixel(gr[i][j]);
+                (*gr)[i][j]->addEdge(e1,(*gr)[i][j+1]);
+                (*gr)[i][j]->addPixel((*gr)[i][j+1]);
+                (*gr)[i][j+1]->addEdge(e1,(*gr)[i][j]);
+                (*gr)[i][j+1]->addPixel((*gr)[i][j]);
         }
     }
-    for(int i=0;i<n-1l;i++){
-        for (int j=0; j<m;j++){
+    cout << "--3--\n";
+    for(int i=0;i<m-1;i++){
+        for (int j=0; j<n;j++){
                 cin >> aux;
                 e1 = new Edge(aux);
-                gr[i][j]->addEdge(e1,gr[i+1][j]);
-                gr[i][j]->addPixel(gr[i+1][j]);
-                gr[i+1][j]->addEdge(e1,gr[i][j]);
-                gr[i+1][j]->addPixel(gr[i][j]);
+                (*gr)[i][j]->addEdge(e1,(*gr)[i+1][j]);
+                (*gr)[i][j]->addPixel((*gr)[i+1][j]);
+                (*gr)[i+1][j]->addEdge(e1,(*gr)[i][j]);
+                (*gr)[i+1][j]->addPixel((*gr)[i][j]);
         }
     }
+    cout << "--4--\n";
     Algorithm* a = new Algorithm(n, m);
+    a->relabelToFront(s,t);
+
+    cout << "--" << t->getE();
+
+    for(vector<Pixel*> vp: *gr){
+        for(Pixel* p: vp){
+            cout << p->getId() + " ";
+        }
+        cout << endl;
+    }
+
+    int c=-1, b=-1;
+    for(vector<Pixel*> vp: *gr){
+        c++;
+        for(Pixel* p: vp){
+            b++;
+            for(pair<Pixel*, Edge*> pe: p->getEdgeMap()){
+                cout << c << "/" << b << "/" << pe.second->getValue() << "-"; 
+            }
+            cout<< " ";
+        }
+        b=-1;
+        cout << endl;
+    }
+
+
     return 0;
 }
 
