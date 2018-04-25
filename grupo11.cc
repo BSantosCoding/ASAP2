@@ -107,6 +107,7 @@ class Graph{
                 for (int j=0; j<m; j++){
                     p->setCompare(comparen);
                     comparen++;
+                    L.push_back(p);
                     graph.at(i).at(j) = p;
                 }
             }
@@ -148,7 +149,9 @@ class Edge{
 
 class Algorithm{
     private:
-        int variaveis;
+        Pixel* current;
+        Pixel* head;
+        Pixel* neighboor;
     public:
         Algorithm(int n, int m){
             s->setH(n*m);
@@ -162,8 +165,7 @@ class Algorithm{
         void Discharge(Pixel* u);
         void Push(Pixel* u, Pixel* v, Edge* edge);
         void Relabel(Pixel* u);
-        void relabelToFront();
-        void preFlow(Graph* g,Pixel* source);
+        void relabelToFront(Graph* g, Pixel* source, Pixel* sink);
 };
 
     void Algorithm::Push(Pixel* u, Pixel* v, Edge* edge){
@@ -183,10 +185,10 @@ class Algorithm{
     void Algorithm::Discharge(Pixel* u){
         Pixel* v;
         while(u->getE()>0){
-            v = u->getCurrent();
+            v = current;
             if (v==NULL){
                 Relabel(u);
-                u->setCurrent(u->getHead());
+                current = head;
             }
             else{
                 Edge* e;
@@ -199,14 +201,18 @@ class Algorithm{
                     Push(u, v, e);
                 }
                 else{
-                    u->setCurrent(v->getN());
+                    current=neighboor;
                 }
             }
         }
     }
+    void Algorithm::relabelToFront(Graph* g, Pixel* source, Pixel* sink){
+
+    }
 
 Pixel* s = new Pixel();
 Pixel* t = new Pixel();
+list<Pixel*> L;
 
 int main(){
     int n, m, aux;
@@ -253,6 +259,7 @@ int main(){
                 gr[i+1][j]->addPixel(gr[i][j]);
         }
     }
+    Algorithm* a = new Algorithm(n, m);
     return 0;
 }
 
