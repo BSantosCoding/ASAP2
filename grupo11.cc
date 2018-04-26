@@ -184,18 +184,12 @@ class Algorithm{
         }
     }
     void Algorithm::Discharge(Pixel* u){
-        Pixel* v;
         list<Pixel*>::iterator it = u->getPixelList().begin();
-        cout << u->getE();
-        cout << u->getH();
         while(u->getE()>0){
-            cout << "oi\n";
             if (it!=u->getPixelList().end()){
-                cout << *(u->getPixelList().end()) << "\n";
-                v = *it;
-                Edge* e = u->getEdgeMap()[v];
-                if(e->getValue() - e->getPf() > 0 && u->getH()==v->getH()+1){
-                    Push(u, v, e);
+                Edge* e = u->getEdgeMap()[*it];
+                if(e->getValue() - e->getPf() > 0 && u->getH()==(*it)->getH()+1){
+                    Push(u, *it, e);
                 }
                 else{
                     it++;
@@ -205,7 +199,6 @@ class Algorithm{
                 Relabel(u);
             }
         }
-        cout<< "dispreso\n";
     }
     void Algorithm::relabelToFront(Pixel* source, Pixel* sink){
         Pixel* u;
@@ -216,16 +209,13 @@ class Algorithm{
         while(it!=L.end()){
             u = *it;
             int oldH = u->getH();
-            cout<< "pila\n";
             Discharge(u);
-            cout<< "sai\n";
             if (u->getH() > oldH){
                 L.erase(it);
                 L.push_front(*it);
             }
             it++;
         }
-        cout<< "IMPORTANTEpreso\n";
     }
 
 int main(){
