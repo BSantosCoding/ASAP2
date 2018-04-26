@@ -135,10 +135,10 @@ class Edge{
         int getNf(){
             return nf;
         }
-        int setPf(int n){
+        void setPf(int n){
             pf=n;
         }
-        int setNf(int n){
+        void setNf(int n){
             nf=n;
         }
         int getValue(){
@@ -176,7 +176,7 @@ class Algorithm{
         int minh=-1;
         for(pair<Pixel*,Edge*> p: u->getEdgeMap()){
             if(p.second->getValue()-p.second->getPf()>0){
-                if(minh=-1) minh=p.first->getH();
+                if((minh=-1)) minh=p.first->getH();
                 else minh=min(minh,p.first->getH());
                 u->setH(minh + 1);
                 if (u->getH() > s->getH()) u->setId("C");
