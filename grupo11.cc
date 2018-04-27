@@ -173,11 +173,10 @@ class Algorithm{
         v->setE(v->getE()+d);
     }
     void Algorithm::Relabel(Pixel* u){
-        int minh=-1;
+        int minh= s->getH()*2 -1;
         for(pair<Pixel*,Edge*> p: u->getEdgeMap()){
             if(p.second->getValue()-p.second->getPf()>0){
-                if((minh=-1)) minh=p.first->getH();
-                else minh=min(minh,p.first->getH());
+                minh=min(minh, min(p.first->getH(), u->getH()));
                 u->setH(minh + 1);
                 if (u->getH() > s->getH()) u->setId("C");
             }
@@ -185,34 +184,36 @@ class Algorithm{
     }
     void Algorithm::Discharge(Pixel* u){
         list<Pixel*>::iterator it = u->getPixelList().begin();
-        while(u->getE()>0){
-            if (it!=u->getPixelList().end()){
+        while(u->getE()>0){ //excesso > 0
+            if (it!=u->getPixelList().end()){ //se houver adjacencias
                 Edge* e = u->getEdgeMap()[*it];
-                if(e->getValue() - e->getPf() > 0 && u->getH()==(*it)->getH()+1){
+                if(u->getH()>(*it)->getH() && e->getValue() - e->getPf() > 0){ //se poder mandar mais de 0 e a altura 
                     Push(u, *it, e);
                 }
-                else{
+                else{ //avancar na lista de adjacencias
                     it++;
                 }
             }
-            else {
+            else { //caso nao haja mais vertices Relabel
                 Relabel(u);
+                it = u->getPixelList().begin();
             }
         }
     }
     void Algorithm::relabelToFront(Pixel* source, Pixel* sink){
         Pixel* u;
-        for(Pixel* p: L){
+        for(Pixel* p: L){ //fazer o push inicial (mandar de s para todos)
             Push(s, p, s->getEdgeMap()[p]);
         }
-        list<Pixel*>::iterator it = L.begin();
-        while(it!=L.end()){
+        list<Pixel*>::iterator it = L.begin(); //meter o iterador no inicio da lista
+        while(it!=L.end()){ //enquanto houver vertices
             u = *it;
             int oldH = u->getH();
             Discharge(u);
             if (u->getH() > oldH){
                 L.erase(it);
                 L.push_front(*it);
+                it = L.begin();
             }
             it++;
         }
