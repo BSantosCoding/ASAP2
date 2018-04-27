@@ -151,13 +151,13 @@ class Algorithm{
     private:
     public:
         Algorithm(int n, int m){
-            s->setH(n*m);
-            for(pair<Pixel*,Edge*> p: s->getEdgeMap()){
+            s->setH(n*m + 2);
+            /*for(pair<Pixel*,Edge*> p: s->getEdgeMap()){
                 p.second->setPf(p.second->getValue());
                 p.second->setNf(-p.second->getValue());
                 p.first->setE(p.second->getValue());
                 s->setE(s->getE()-p.second->getValue());
-            }
+            }*/
         }
         void Discharge(Pixel* u);
         void Push(Pixel* u, Pixel* v, Edge* edge);
@@ -166,6 +166,7 @@ class Algorithm{
 };
 
     void Algorithm::Push(Pixel* u, Pixel* v, Edge* edge){
+        cout << "Sou:"<< u->getH() << "Para:"<<v->getH() << "\n";
         int d = min(u->getE(), edge->getValue()-edge->getPf());
         edge->setPf(edge->getPf() + d);
         edge->setNf(edge->getNf() - d);
@@ -181,18 +182,19 @@ class Algorithm{
                 if (u->getH() > s->getH()) u->setId("C");
             }
         }
+        cout << "Dei Relabel para:"<< u->getH() << "\n";
     }
     void Algorithm::Discharge(Pixel* u){
         list<Pixel*>::iterator it = u->getPixelList().begin();
         while(u->getE()>0){ //excesso > 0
             if (it!=u->getPixelList().end()){ //se houver adjacencias
+                cout << "\nentrei " << "V=" << u->getH();
                 Edge* e = u->getEdgeMap()[*it];
-                if(u->getH()>(*it)->getH() && e->getValue() - e->getPf() > 0){ //se poder mandar mais de 0 e a altura 
+                if((u->getH()==(*it)->getH()+1) && (e->getValue() - e->getPf() > 0)){ //se poder mandar mais de 0 e a altura
+                    cout << "\nPosso dar Push";
                     Push(u, *it, e);
                 }
-                else{ //avancar na lista de adjacencias
-                    it++;
-                }
+                else it++;
             }
             else { //caso nao haja mais vertices Relabel
                 Relabel(u);
