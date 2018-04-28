@@ -152,6 +152,7 @@ class Algorithm{
 };
 
     void Algorithm::Push(Pixel* u, Pixel* v, Edge* edge){
+        cout << "Sou:"<< u->getH() << "Para:"<<v->getH() << "\n";
         int d = min(u->getE(), edge->getValue()-edge->getPf());
         edge->setPf(edge->getPf() + d);
         v->getEdgeMap()[u]->setPf(v->getEdgeMap()[u]->getPf()-d);
