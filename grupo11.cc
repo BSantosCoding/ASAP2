@@ -6,6 +6,7 @@
 #include <utility>
 #include <string>
 #include <map>
+#include <limits>
 
 using namespace std;
 class Edge;
@@ -40,7 +41,7 @@ class Pixel{
         void setP(int n);
         void setE(int n);
         void setH(int n);
-        void setId(string id);
+        void setId(string idcp);
         void addEdge(Edge* edge, Pixel* pixel);
         void addPixel(Pixel* pixel);
 };
@@ -77,8 +78,8 @@ class Pixel{
     void Pixel::setH(int n){
         h=n;
     }
-    void Pixel::setId(string id){
-        id=id;
+    void Pixel::setId(string idcp){
+        id=idcp;
     }
     void Pixel::addEdge(Edge* edge, Pixel* pixel){
         edgeMap[pixel]=edge;
@@ -106,7 +107,6 @@ class Graph{
                     s->addPixel(p);
                     p->addPixel(s);
                     t->addPixel(p);
-                    p->addPixel(t);
                     L.push_back(p);
                     graph->at(i).at(j) = p;
                 }
@@ -121,25 +121,17 @@ class Edge{
     private:
         int value;
         int pf;
-        int nf;
     public:
         Edge();
         Edge(int val){
             value=val;
             pf=0;
-            nf=0;
         }
         int getPf(){
             return pf;
         }
-        int getNf(){
-            return nf;
-        }
         void setPf(int n){
             pf=n;
-        }
-        void setNf(int n){
-            nf=n;
         }
         int getValue(){
             return value;
@@ -151,13 +143,7 @@ class Algorithm{
     private:
     public:
         Algorithm(int n, int m){
-            s->setH(n*m);
-            for(pair<Pixel*,Edge*> p: s->getEdgeMap()){
-                p.second->setPf(p.second->getValue());
-                p.second->setNf(-p.second->getValue());
-                p.first->setE(p.second->getValue());
-                s->setE(s->getE()-p.second->getValue());
-            }
+            s->setH(n*m + 2);
         }
         void Discharge(Pixel* u);
         void Push(Pixel* u, Pixel* v, Edge* edge);
@@ -168,54 +154,69 @@ class Algorithm{
     void Algorithm::Push(Pixel* u, Pixel* v, Edge* edge){
         int d = min(u->getE(), edge->getValue()-edge->getPf());
         edge->setPf(edge->getPf() + d);
-        edge->setNf(edge->getNf() - d);
+        v->getEdgeMap()[u]->setPf(v->getEdgeMap()[u]->getPf()-d);
+        //cout << "AntesExcesso:" << u->getE();
         u->setE(u->getE()-d);
         v->setE(v->getE()+d);
+        //cout << "DepoisExcesso:" << u->getE() << " Mandei:" << d << "\n";
     }
     void Algorithm::Relabel(Pixel* u){
-        int minh= s->getH()*2 -1;
-        for(pair<Pixel*,Edge*> p: u->getEdgeMap()){
-            if(p.second->getValue()-p.second->getPf()>0){
+        int minh=numeric_limits<int>::max();
+        cout << "\nRelabel";
+        for(pair<Pixel*,Edge*> p: u->getEdgeMap()){//PROBLEMA
+            cout << "\nDENTRO" << p.second->getValue() << "-" << p.second->getPf() << "|" << p.first->getH() << "-" << u->getH();
+            if((p.second->getValue()-p.second->getPf()>0) && (p.first->getH()>= u->getH())){
+                cout << "\nSafety";
                 minh=min(minh, min(p.first->getH(), u->getH()));
                 u->setH(minh + 1);
-                if (u->getH() > s->getH()) u->setId("C");
             }
         }
+        if (u->getH() > s->getH()) u->setId("C");
+        cout << "\nDei Relabel para:"<< u->getH();
     }
     void Algorithm::Discharge(Pixel* u){
-        list<Pixel*>::iterator it = u->getPixelList().begin();
+        list<Pixel*> test = u->getPixelList();
+        list<Pixel*>::iterator it = test.begin();
         while(u->getE()>0){ //excesso > 0
-            if (it!=u->getPixelList().end()){ //se houver adjacencias
-                Edge* e = u->getEdgeMap()[*it];
-                if(u->getH()>(*it)->getH() && e->getValue() - e->getPf() > 0){ //se poder mandar mais de 0 e a altura 
-                    Push(u, *it, e);
-                }
-                else{ //avancar na lista de adjacencias
-                    it++;
-                }
+            if (it==test.end()){ //se houver adjacencias
+                //cout << "\nVou dar relabel";
+                //cout << "\nloop1";
+                Relabel(u);
+                it = test.begin();
             }
             else { //caso nao haja mais vertices Relabel
-                Relabel(u);
-                it = u->getPixelList().begin();
+                //cout << "\nloop2";
+                Edge* e = u->getEdgeMap()[*it];
+                //cout << "\nTeste:" << e->getValue() << "-" << e->getPf() << " H" << u->getH() << "-" << (*it)->getH();
+                if((u->getH()==(*it)->getH()+1) && (e->getValue() - e->getPf() > 0)){ //se poder mandar mais de 0 e a altura
+                    //cout << "\nPosso dar Push";
+                    Push(u, *it, e);
+                }
+                else {it++;}
             }
         }
     }
     void Algorithm::relabelToFront(Pixel* source, Pixel* sink){
         Pixel* u;
+        int sexcess=0;
+
         for(Pixel* p: L){ //fazer o push inicial (mandar de s para todos)
             Push(s, p, s->getEdgeMap()[p]);
         }
+        //cout << s->getE();
+
         list<Pixel*>::iterator it = L.begin(); //meter o iterador no inicio da lista
         while(it!=L.end()){ //enquanto houver vertices
             u = *it;
             int oldH = u->getH();
             Discharge(u);
+            //cout << "\nDischarge Completo";
             if (u->getH() > oldH){
                 L.erase(it);
                 L.push_front(*it);
                 it = L.begin();
             }
-            it++;
+            else it++;
         }
     }
 
@@ -231,7 +232,10 @@ int main(){
                 cin >> aux;
                 (*gr)[i][j]->setP(aux);
                 e1 = new Edge(aux);
-                (*gr)[i][j]->addEdge(e1, s);
+                e2 = new Edge(aux);
+                e2->setPf(aux);
+                s->setE(s->getE()+aux);
+                (*gr)[i][j]->addEdge(e2, s);
                 s->addEdge(e1, (*gr)[i][j]);
         }
     }
@@ -240,8 +244,9 @@ int main(){
         for (int j=0; j<n; j++){
                 cin >> aux;
                 (*gr)[i][j]->setC(aux);
-                e2 = new Edge(aux);
-                (*gr)[i][j]->addEdge(e2, t);
+                e1 = new Edge(aux);
+                e2 = new Edge(0);
+                (*gr)[i][j]->addEdge(e1, t);
                 t->addEdge(e2, (*gr)[i][j]);
         }
     }
@@ -250,9 +255,11 @@ int main(){
         for (int j=0; j<n-1;j++){
                 cin >>aux;
                 e1 = new Edge(aux);
+                e2 = new Edge(aux);
+                e2->setPf(aux);
                 (*gr)[i][j]->addEdge(e1,(*gr)[i][j+1]);
                 (*gr)[i][j]->addPixel((*gr)[i][j+1]);
-                (*gr)[i][j+1]->addEdge(e1,(*gr)[i][j]);
+                (*gr)[i][j+1]->addEdge(e2,(*gr)[i][j]);
                 (*gr)[i][j+1]->addPixel((*gr)[i][j]);
         }
     }
@@ -261,39 +268,33 @@ int main(){
         for (int j=0; j<n;j++){
                 cin >> aux;
                 e1 = new Edge(aux);
+                e2 = new Edge(aux);
+                e2->setPf(aux);
                 (*gr)[i][j]->addEdge(e1,(*gr)[i+1][j]);
                 (*gr)[i][j]->addPixel((*gr)[i+1][j]);
-                (*gr)[i+1][j]->addEdge(e1,(*gr)[i][j]);
+                (*gr)[i+1][j]->addEdge(e2,(*gr)[i][j]);
                 (*gr)[i+1][j]->addPixel((*gr)[i][j]);
         }
     }
     cout << "--4--\n";
+    for(int i=0;i<m;i++){
+        for(int j=0; j<n;j++){
+            (*gr)[i][j]->addPixel(t);
+        }
+    }
+
+
     Algorithm* a = new Algorithm(n, m);
     a->relabelToFront(s,t);
 
-    cout << "--" << t->getE();
+    cout << "-->" << t->getE()<< "-" << s->getE() << "\n";
 
     for(vector<Pixel*> vp: *gr){
         for(Pixel* p: vp){
-            cout << p->getId() + " ";
+            cout << p->getId() << "-" << p->getH() << "-" << p->getE() <<" ";
         }
         cout << endl;
     }
-
-    int c=-1, b=-1;
-    for(vector<Pixel*> vp: *gr){
-        c++;
-        for(Pixel* p: vp){
-            b++;
-            for(pair<Pixel*, Edge*> pe: p->getEdgeMap()){
-                cout << c << "/" << b << "/" << pe.second->getValue() << "-"; 
-            }
-            cout<< " ";
-        }
-        b=-1;
-        cout << endl;
-    }
-
 
     return 0;
 }
