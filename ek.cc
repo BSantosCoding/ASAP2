@@ -149,8 +149,8 @@ class Algorithm{
         }
         inline int ekBfs(){
             int augmentFlow = 0;
-            stack<Pixel*> ekBfsQueue;
-            stack<int> augmentCap;
+            stack<Pixel*> ekBfsQueue = stack<Pixel*>();
+            stack<int> augmentCap = stack<int>();
             ekBfsQueue.push(s);
             augmentCap.push(numeric_limits<int>::max());
             while(!ekBfsQueue.empty()){
@@ -159,8 +159,8 @@ class Algorithm{
                 ekBfsQueue.pop();
                 augmentCap.pop();
                 list<Pixel*> adjLst = u->getPixelList();
-                list<Pixel*>::iterator it;
-                for(auto it= adjLst.begin(); it!=adjLst.end(); it++){
+                list<Pixel*>::iterator it = adjLst.begin();
+                for(it; it!=adjLst.end(); it++){
                     cout << (*it)->getNid() << "\n";
                     Edge* e = u->getEdgeMap()[*it];
                     if(e->getValue()>0 && (*it)->getParent()->getNid()==startp->getNid()){
@@ -171,24 +171,22 @@ class Algorithm{
                         cout << (*it)->getNid() << "-|-" << t->getNid() << "\n";
                         if((*it)->getNid()==t->getNid()){
                             cout << "entrei2\n";
-                            ekBfsQueue.pop();
-                            augmentCap.pop();
                             augmentFlow = min(cap  , e->getValue());
-                            break;
+                            cout <<"-HA PORCA-" << augmentFlow << "OTARIO\n";
+                            if(augmentFlow>0){
+                                Pixel* currentPixel = t;
+                                while(currentPixel->getNid() != s->getNid()){
+                                    currentPixel->getParent()->getEdgeMap()[currentPixel]->setValue(currentPixel->getParent()->getEdgeMap()[currentPixel]->getValue()-augmentFlow);
+                                    currentPixel->getEdgeMap()[currentPixel->getParent()]->setValue(currentPixel->getEdgeMap()[currentPixel->getParent()]->getValue()+augmentFlow);
+                                    currentPixel = currentPixel->getParent();
+                                }
+                                return augmentFlow;
+                            }
                         }
                     }
                 }
+
             }
-            if(augmentFlow>0){
-                Pixel* currentPixel = t;
-                while(currentPixel->getNid() != s->getNid()){
-                    currentPixel->getParent()->getEdgeMap()[currentPixel]->setValue(currentPixel->getParent()->getEdgeMap()[currentPixel]->getValue()-augmentFlow);
-                    currentPixel->getEdgeMap()[currentPixel->getParent()]->setValue(currentPixel->getEdgeMap()[currentPixel->getParent()]->getValue()+augmentFlow);
-                    currentPixel = currentPixel->getParent();
-                }
-            }
-            cout << augmentFlow << "\n";
-            return augmentFlow;
         }
 
         inline int EK(){
@@ -200,9 +198,6 @@ class Algorithm{
                 }
                 else flow += currentFlow;
             }
-        }
-
-        inline int getFlow(){
             return flow;
         }
 };
@@ -268,8 +263,7 @@ int main(){
     cout << "--4--\n";
 
     Algorithm* a = new Algorithm(n, m);
-    a->EK();
-    cout << "-->" << a->getFlow() << "\n";
+    cout << "-->" << a->EK() << "\n";
 
     return 0;
 }
