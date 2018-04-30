@@ -177,7 +177,8 @@ class Algorithm{
                                 Pixel* currentPixel = t;
                                 while(currentPixel->getNid() != s->getNid()){
                                     currentPixel->getParent()->getEdgeMap()[currentPixel]->setValue(currentPixel->getParent()->getEdgeMap()[currentPixel]->getValue()-augmentFlow);
-                                    currentPixel->getEdgeMap()[currentPixel->getParent()]->setValue(currentPixel->getEdgeMap()[currentPixel->getParent()]->getValue()+augmentFlow);
+                                    if (currentPixel->getNid()!=t->getNid() && currentPixel->getParent()->getNid()!=s->getNid())
+                                        currentPixel->getEdgeMap()[currentPixel->getParent()]->setValue(currentPixel->getEdgeMap()[currentPixel->getParent()]->getValue()+augmentFlow);
                                     currentPixel = currentPixel->getParent();
                                 }
                                 return augmentFlow;
