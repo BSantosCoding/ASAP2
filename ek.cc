@@ -172,21 +172,20 @@ class Algorithm{
                         if((*it)->getNid()==t->getNid()){
                             cout << "entrei2\n";
                             augmentFlow = min(cap  , e->getValue());
-                            cout <<"-HA PORCA-" << augmentFlow << "OTARIO\n";
-                            if(augmentFlow>0){
-                                Pixel* currentPixel = t;
-                                while(currentPixel->getNid() != s->getNid()){
-                                    currentPixel->getParent()->getEdgeMap()[currentPixel]->setValue(currentPixel->getParent()->getEdgeMap()[currentPixel]->getValue()-augmentFlow);
-                                    if (currentPixel->getNid()!=t->getNid() && currentPixel->getParent()->getNid()!=s->getNid())
-                                        currentPixel->getEdgeMap()[currentPixel->getParent()]->setValue(currentPixel->getEdgeMap()[currentPixel->getParent()]->getValue()+augmentFlow);
-                                    currentPixel = currentPixel->getParent();
-                                }
-                                return augmentFlow;
-                            }
+                            cout <<"-->" << augmentFlow << "\n";
                         }
                     }
                 }
-
+            }
+            if(augmentFlow>0){
+                Pixel* currentPixel = t;
+                while(currentPixel->getNid() != s->getNid()){
+                    currentPixel->getParent()->getEdgeMap()[currentPixel]->setValue(currentPixel->getParent()->getEdgeMap()[currentPixel]->getValue()-augmentFlow);
+                    if (currentPixel->getNid()!=t->getNid() && currentPixel->getParent()->getNid()!=s->getNid())
+                        currentPixel->getEdgeMap()[currentPixel->getParent()]->setValue(currentPixel->getEdgeMap()[currentPixel->getParent()]->getValue()+augmentFlow);
+                    currentPixel = currentPixel->getParent();
+                }
+                return augmentFlow;
             }
         }
 
@@ -204,7 +203,7 @@ class Algorithm{
 };
 
 int main(){
-    int n, m, aux;
+    int n, m, aux,flow;
     Edge *e1, *e2;
     cin >> m;
     cin >> n;
@@ -226,11 +225,19 @@ int main(){
         for (int j=0; j<n; j++){
                 cin >> aux;
                 (*gr)[i][j]->setC(aux);
-                if(aux!=0){
-                    e1 = new Edge(aux);
-                    (*gr)[i][j]->addEdge(e1, t);
-                    (*gr)[i][j]->addPixel(t);  
+                if((*gr)[i][j]->getC()<(*gr)[i][j]->getP()){
+                    s->getEdgeMap()[(*gr)[i][j]]->setValue((*gr)[i][j]->getP()-(*gr)[i][j]->getC());
                 }
+                else if((*gr)[i][j]->getC()>(*gr)[i][j]->getP()){
+                    s->getEdgeMap().erase((*gr)[i][j]);
+                    e1 = new Edge(aux-(*gr)[i][j]->getP());
+                    (*gr)[i][j]->addEdge(e1, t);
+                    (*gr)[i][j]->addPixel(t);
+                }
+                else{
+                    s->getEdgeMap().erase((*gr)[i][j]);
+                }
+                flow += min((*gr)[i][j]->getC(), (*gr)[i][j]->getP());
         }
     }
     cout << "--2--\n";
@@ -264,7 +271,8 @@ int main(){
     cout << "--4--\n";
 
     Algorithm* a = new Algorithm(n, m);
-    cout << "-->" << a->EK() << "\n";
+    flow += a->EK();
+    cout << "-->" << flow << "\n";
 
     return 0;
 }
