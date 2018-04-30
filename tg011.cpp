@@ -174,20 +174,20 @@ class Algorithm{
                         (*it)->setParent(u);
                         if((*it)->getNid()==t->getNid()){
                             augmentFlow = min(cap  , e->getValue());
-                            if(augmentFlow>0){
-                                Pixel* currentPixel = t;
-                                while(currentPixel->getNid() != s->getNid()){
-                                    currentPixel->getParent()->getEdgeMap()[currentPixel]->setValue(currentPixel->getParent()->getEdgeMap()[currentPixel]->getValue()-augmentFlow);
-                                    if (currentPixel->getNid()!=t->getNid() && currentPixel->getParent()->getNid()!=s->getNid())
-                                        currentPixel->getEdgeMap()[currentPixel->getParent()]->setValue(currentPixel->getEdgeMap()[currentPixel->getParent()]->getValue()+augmentFlow);
-                                    currentPixel = currentPixel->getParent();
-                                }
-                            }
-                            return augmentFlow;
+                            break;
                         }
                         edgePath.push_back(e);
                         pixelPath.push_back((*it));
                     }
+                }
+            }
+            if(augmentFlow>0){
+                Pixel* currentPixel = t;
+                while(currentPixel->getNid() != s->getNid()){
+                    currentPixel->getParent()->getEdgeMap()[currentPixel]->setValue(currentPixel->getParent()->getEdgeMap()[currentPixel]->getValue()-augmentFlow);
+                    if (currentPixel->getNid()!=t->getNid() && currentPixel->getParent()->getNid()!=s->getNid())
+                        currentPixel->getEdgeMap()[currentPixel->getParent()]->setValue(currentPixel->getEdgeMap()[currentPixel->getParent()]->getValue()+augmentFlow);
+                    currentPixel = currentPixel->getParent();
                 }
             }
             return augmentFlow;
@@ -200,7 +200,9 @@ class Algorithm{
                 if(currentFlow==0){ 
                     break;
                 }
-                else flow += currentFlow;
+                else {
+                    flow += currentFlow;
+                }
             }
             return flow;
         }
@@ -235,17 +237,19 @@ int main(){
         for (int j=0; j<n; j++){
                 cin >> aux;
                 (*gr)[i][j]->setC(aux);
-                if((*gr)[i][j]->getC()<(*gr)[i][j]->getP()){
-                    s->getEdgeMap()[(*gr)[i][j]]->setValue((*gr)[i][j]->getP()-(*gr)[i][j]->getC());
-                }
-                else if((*gr)[i][j]->getC()>(*gr)[i][j]->getP()){
-                    s->getEdgeMap().erase((*gr)[i][j]);
-                    e1 = new Edge(aux-(*gr)[i][j]->getP());
-                    (*gr)[i][j]->addEdge(e1, t);
-                    (*gr)[i][j]->addPixel(t);
-                }
-                else{
-                    s->getEdgeMap().erase((*gr)[i][j]);
+                if(aux!=0){
+                    if((*gr)[i][j]->getC()<(*gr)[i][j]->getP()){
+                        s->getEdgeMap()[(*gr)[i][j]]->setValue((*gr)[i][j]->getP()-(*gr)[i][j]->getC());
+                    }
+                    else if((*gr)[i][j]->getC()>(*gr)[i][j]->getP()){
+                        s->getEdgeMap().erase((*gr)[i][j]);
+                        e1 = new Edge(aux-(*gr)[i][j]->getP());
+                        (*gr)[i][j]->addEdge(e1, t);
+                        (*gr)[i][j]->addPixel(t);
+                    }
+                    else{
+                        s->getEdgeMap().erase((*gr)[i][j]);
+                    }
                 }
                 flow += min((*gr)[i][j]->getC(), (*gr)[i][j]->getP());
         }
@@ -282,7 +286,6 @@ int main(){
     a->findCut();
     cout << flow << "\n";
 
-    cout << "\n";
     for(vector<Pixel*> vp: (*gr)){
         for(Pixel* p: vp){
             cout << p->getId() << " ";
