@@ -1,8 +1,6 @@
 #include <iostream>
 #include <list>
 #include <vector>
-#include <stack>
-#include <set>
 #include <utility>
 #include <string>
 #include <map>
@@ -132,6 +130,7 @@ class Edge{
         }
         void setPf(int n){
             pf=n;
+            if (pf<0) pf=0;
         }
         int getValue(){
             return value;
@@ -156,10 +155,10 @@ class Algorithm{
         int d = min(u->getE(), edge->getValue()-edge->getPf());
         edge->setPf(edge->getPf() + d);
         v->getEdgeMap()[u]->setPf(v->getEdgeMap()[u]->getPf()-d);
-        //cout << "AntesExcesso:" << u->getE();
+        //cout << "AntesExcesso:" << u->getE() << " ";
         u->setE(u->getE()-d);
         v->setE(v->getE()+d);
-        //cout << "DepoisExcesso:" << u->getE() << " Mandei:" << d << "\n";
+        //cout << "DepoisExcesso:" << u->getE() << " " << " Mandei:" << d << "\n";
     }
     void Algorithm::Relabel(Pixel* u){
         int minh=numeric_limits<int>::max();
@@ -169,9 +168,9 @@ class Algorithm{
             if((p.second->getValue()-p.second->getPf()>0) && (p.first->getH()>= u->getH())){
                 cout << "\nSafety";
                 minh=min(minh, min(p.first->getH(), u->getH()));
-                u->setH(minh + 1);
             }
         }
+        u->setH(minh + 1);
         if (u->getH() > s->getH()) u->setId("C");
         cout << "\nDei Relabel para:"<< u->getH();
     }
@@ -198,26 +197,26 @@ class Algorithm{
         }
     }
     void Algorithm::relabelToFront(Pixel* source, Pixel* sink){
-        Pixel* u;
-        int sexcess=0;
+        Pixel *u, *aux;
 
         for(Pixel* p: L){ //fazer o push inicial (mandar de s para todos)
             Push(s, p, s->getEdgeMap()[p]);
         }
         //cout << s->getE();
 
-        list<Pixel*>::iterator it = L.begin(); //meter o iterador no inicio da lista
-        while(it!=L.end()){ //enquanto houver vertices
-            u = *it;
+        list<Pixel*>::iterator iter = L.begin(); //meter o iterador no inicio da lista
+        while(iter!=L.end()){ //enquanto houver vertices
+            u = *iter;
             int oldH = u->getH();
             Discharge(u);
             //cout << "\nDischarge Completo";
             if (u->getH() > oldH){
-                L.erase(it);
-                L.push_front(*it);
-                it = L.begin();
+                aux = *iter;
+                L.erase(iter);
+                L.push_front(aux);
+                iter = L.begin();
             }
-            else it++;
+            else iter++;
         }
     }
 
@@ -245,10 +244,6 @@ int main(){
         for (int j=0; j<n; j++){
                 cin >> aux;
                 (*gr)[i][j]->setC(aux);
-                e1 = new Edge(aux);
-                e2 = new Edge(0);
-                (*gr)[i][j]->addEdge(e1, t);
-                t->addEdge(e2, (*gr)[i][j]);
         }
     }
     cout << "--2--\n";
@@ -281,9 +276,12 @@ int main(){
     for(int i=0;i<m;i++){
         for(int j=0; j<n;j++){
             (*gr)[i][j]->addPixel(t);
+            e1 = new Edge((*gr)[i][j]->getC());
+            e2 = new Edge((*gr)[i][j]->getC());
+            (*gr)[i][j]->addEdge(e1, t);
+            t->addEdge(e2, (*gr)[i][j]);
         }
     }
-
 
     Algorithm* a = new Algorithm(n, m);
     a->relabelToFront(s,t);
