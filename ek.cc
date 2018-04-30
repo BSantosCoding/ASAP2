@@ -139,13 +139,13 @@ class Edge{
 class Algorithm{
     private:
         int m, n, flow;
+        list<Pixel*> pixelPath;
+        list<Edge*> edgePath;
     public:
         Algorithm(int n, int m){
             m=m;
             n=n;
-            for(Pixel* p: L) p->setParent(startp);
             s->setParent(spred);
-            t->setParent(startp);
         }
         inline int ekBfs(){
             int augmentFlow = 0;
@@ -160,21 +160,15 @@ class Algorithm{
                 ekBfsQueue.pop();
                 augmentCap.pop();
                 list<Pixel*> adjLst = u->getPixelList();
-                list<Pixel*>::iterator it = adjLst.begin();
-                for(it; it!=adjLst.end(); it++){
-                    cout <<(*it)->getNid() << "--"<< "\n";
+                list<Pixel*>::iterator it;
+                for(auto it = adjLst.begin(); it!=adjLst.end(); it++){
                     Edge* e = u->getEdgeMap()[*it];
-                    cout << e->getValue() << "<--aresta\n";
                     if(e->getValue()>0 && (*it)->getParent()->getNid()==startp->getNid()){
-                        cout << "entrei\n";
                         ekBfsQueue.push((*it));
                         augmentCap.push(min(cap, e->getValue()));
                         (*it)->setParent(u);
-                        cout << (*it)->getNid() << "-|-" << t->getNid() << "\n";
                         if((*it)->getNid()==t->getNid()){
-                            cout << "entrei2\n";
                             augmentFlow = min(cap  , e->getValue());
-                            cout <<"-->" << augmentFlow << "\n";
                             if(augmentFlow>0){
                                 Pixel* currentPixel = t;
                                 while(currentPixel->getNid() != s->getNid()){
@@ -189,6 +183,7 @@ class Algorithm{
                     }
                 }
             }
+            return augmentFlow;
         }
 
         inline int EK(){
@@ -205,7 +200,7 @@ class Algorithm{
 };
 
 int main(){
-    int n, m, aux,flow;
+    int n, m, aux,flow=0;
     Edge *e1, *e2;
     cin >> m;
     cin >> n;
@@ -222,7 +217,6 @@ int main(){
                 } 
         }
     }
-    cout << "--1--\n";
     for (int i=0; i<m; i++){
         for (int j=0; j<n; j++){
                 cin >> aux;
@@ -242,7 +236,6 @@ int main(){
                 flow += min((*gr)[i][j]->getC(), (*gr)[i][j]->getP());
         }
     }
-    cout << "--2--\n";
     for (int i=0; i<m;i++){
         for (int j=0; j<n-1;j++){
                 cin >>aux;
@@ -256,7 +249,6 @@ int main(){
                 }
         }
     }
-    cout << "--3--\n";
     for(int i=0;i<m-1;i++){
         for (int j=0; j<n;j++){
                 cin >> aux;
@@ -270,7 +262,6 @@ int main(){
                 }
         }
     }
-    cout << "--4--\n";
 
     Algorithm* a = new Algorithm(n, m);
     flow += a->EK();
