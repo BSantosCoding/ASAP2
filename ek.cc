@@ -148,6 +148,8 @@ class Algorithm{
             s->setParent(spred);
         }
         inline int ekBfs(){
+            edgePath.clear();
+            pixelPath.clear();
             int augmentFlow = 0;
             for(Pixel* p: L) p->setParent(startp); t->setParent(startp);
             stack<Pixel*> ekBfsQueue = stack<Pixel*>();
@@ -180,6 +182,8 @@ class Algorithm{
                             }
                             return augmentFlow;
                         }
+                        edgePath.push_back(e);
+                        pixelPath.push_back((*it));
                     }
                 }
             }
@@ -197,6 +201,13 @@ class Algorithm{
             }
             return flow;
         }
+
+        void findCut(){
+            for(Pixel* p:pixelPath){
+                p->setId("C");
+            }
+        }
+
 };
 
 int main(){
@@ -265,7 +276,16 @@ int main(){
 
     Algorithm* a = new Algorithm(n, m);
     flow += a->EK();
-    cout << "-->" << flow << "\n";
+    a->findCut();
+    cout << flow << "\n";
+
+    cout << "\n";
+    for(vector<Pixel*> vp: (*gr)){
+        for(Pixel* p: vp){
+            cout << p->getId() << " ";
+        }
+        cout << endl;
+    }
 
     return 0;
 }
