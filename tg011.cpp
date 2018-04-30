@@ -151,7 +151,10 @@ class Algorithm{
             edgePath.clear();
             pixelPath.clear();
             int augmentFlow = 0;
-            for(Pixel* p: L) p->setParent(startp); t->setParent(startp);
+            for(Pixel* p: L){
+                p->setParent(startp);
+            } 
+            t->setParent(startp);
             stack<Pixel*> ekBfsQueue = stack<Pixel*>();
             stack<int> augmentCap = stack<int>();
             ekBfsQueue.push(s);
