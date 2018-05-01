@@ -238,20 +238,25 @@ int main(){
                 cin >> aux;
                 (*gr)[i][j]->setC(aux);
                 if(aux!=0){
-                    if((*gr)[i][j]->getC()<(*gr)[i][j]->getP()){
-                        s->getEdgeMap()[(*gr)[i][j]]->setValue((*gr)[i][j]->getP()-(*gr)[i][j]->getC());
+                    e1 = new Edge(aux);
+                    (*gr)[i][j]->addEdge(e1, t);
+                    (*gr)[i][j]->addPixel(t);
+                    /*if((*gr)[i][j]->getC()==(*gr)[i][j]->getP()){
+                        s->getEdgeMap().erase((*gr)[i][j]);
+                        s->getPixelList().remove((*gr)[i][j]);
                     }
                     else if((*gr)[i][j]->getC()>(*gr)[i][j]->getP()){
                         s->getEdgeMap().erase((*gr)[i][j]);
+                        s->getPixelList().remove((*gr)[i][j]);
                         e1 = new Edge(aux-(*gr)[i][j]->getP());
                         (*gr)[i][j]->addEdge(e1, t);
                         (*gr)[i][j]->addPixel(t);
                     }
                     else{
-                        s->getEdgeMap().erase((*gr)[i][j]);
-                    }
+                        s->getEdgeMap()[(*gr)[i][j]]->setValue((*gr)[i][j]->getP()-(*gr)[i][j]->getC());
+                    }*/
                 }
-                flow += min((*gr)[i][j]->getC(), (*gr)[i][j]->getP());
+                //flow += min((*gr)[i][j]->getC(), (*gr)[i][j]->getP());
         }
     }
     for (int i=0; i<m;i++){
@@ -286,6 +291,7 @@ int main(){
     a->findCut();
     cout << flow << "\n";
 
+    cout << endl;
     for(vector<Pixel*> vp: (*gr)){
         for(Pixel* p: vp){
             cout << p->getId() << " ";
