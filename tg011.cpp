@@ -21,6 +21,7 @@ class Pixel{
         map<Pixel*, Edge*> edgeMap;
         list<Pixel*> pixelList;
         string id = "";
+
     public:
         Pixel(){
             c=0;
@@ -122,18 +123,25 @@ class Graph{
 class Edge{
     private:
         int value;
+        Edge* e;
     public:
         Edge();
         Edge(int val){
             value=val;
         }
+
         int getValue(){
             return value;
         }
         void setValue(int n){
             value=n;
         }
-
+        void setEdge (Edge* ed){
+            e=ed;
+        }
+        Edge* getEdge(){
+            return e;
+        }
 };
 
 class Algorithm{
@@ -150,6 +158,7 @@ class Algorithm{
         inline int ekBfs(){
             edgePath.clear();
             pixelPath.clear();
+            Edge* e;
             int augmentFlow = 0;
             for(Pixel* p: L){
                 p->setParent(startp);
@@ -167,7 +176,7 @@ class Algorithm{
                 list<Pixel*> adjLst = u->getPixelList();
                 list<Pixel*>::iterator it;
                 for(auto it = adjLst.begin(); it!=adjLst.end(); it++){
-                    Edge* e = u->getEdgeMap()[*it];
+                    e = u->getEdgeMap()[*it];
                     if(e->getValue()>0 && (*it)->getParent()->getNid()==startp->getNid()){
                         ekBfsQueue.push((*it));
                         augmentCap.push(min(cap, e->getValue()));
@@ -182,13 +191,23 @@ class Algorithm{
                 }
             }
             if(augmentFlow>0){
-                Pixel* currentPixel = t;
+                Pixel* currentPixel = t->getParent();
+                list<Edge*>::iterator it;
+                e->setValue(e->getValue()-augmentFlow);
+                it=edgePath.begin();
+                while(currentPixel->getNid() != s->getNid()){
+                    (*it)->setValue((*it)->getValue()-augmentFlow);
+                    (*it)->getEdge()->setValue((*it)->getEdge()->getValue()+augmentFlow);
+                    it++;
+                    currentPixel = currentPixel->getParent();
+                }
+                /*
                 while(currentPixel->getNid() != s->getNid()){
                     currentPixel->getParent()->getEdgeMap()[currentPixel]->setValue(currentPixel->getParent()->getEdgeMap()[currentPixel]->getValue()-augmentFlow);
                     if (currentPixel->getNid()!=t->getNid() && currentPixel->getParent()->getNid()!=s->getNid())
                         currentPixel->getEdgeMap()[currentPixel->getParent()]->setValue(currentPixel->getEdgeMap()[currentPixel->getParent()]->getValue()+augmentFlow);
                     currentPixel = currentPixel->getParent();
-                }
+                }*/
             }
             return augmentFlow;
         }
@@ -265,6 +284,8 @@ int main(){
                 if(aux!=0){
                     e1 = new Edge(aux);
                     e2 = new Edge(aux);
+                    e1->setEdge(e2);
+                    e2->setEdge(e1);
                     (*gr)[i][j]->addEdge(e1,(*gr)[i][j+1]);
                     (*gr)[i][j]->addPixel((*gr)[i][j+1]);
                     (*gr)[i][j+1]->addEdge(e2,(*gr)[i][j]);
@@ -278,6 +299,8 @@ int main(){
                 if(aux!=0){
                     e1 = new Edge(aux);
                     e2 = new Edge(aux);
+                    e1->setEdge(e2);
+                    e2->setEdge(e1);
                     (*gr)[i][j]->addEdge(e1,(*gr)[i+1][j]);
                     (*gr)[i][j]->addPixel((*gr)[i+1][j]);
                     (*gr)[i+1][j]->addEdge(e2,(*gr)[i][j]);
