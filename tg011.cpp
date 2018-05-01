@@ -182,9 +182,10 @@ class Algorithm{
                         augmentCap.push(min(cap, e->getValue()));
                         (*it)->setParent(u);
                         if((*it)->getNid()==t->getNid()){
-                            augmentFlow = min(cap, e->getValue());
+                            augmentFlow = min(cap  , e->getValue());
                             break;
                         }
+                        
                         edgePath.push_back(e);
                         pixelPath.push_back((*it));
                     }
@@ -257,10 +258,11 @@ int main(){
                 cin >> aux;
                 (*gr)[i][j]->setC(aux);
                 if(aux!=0){
-                    e1 = new Edge(aux);
+                    e1 = new Edge(aux-(*gr)[i][j]->getP());
                     (*gr)[i][j]->addEdge(e1, t);
                     (*gr)[i][j]->addPixel(t);
-                    /*if((*gr)[i][j]->getC()==(*gr)[i][j]->getP()){
+                    /*flow += min((*gr)[i][j]->getC(), (*gr)[i][j]->getP());
+                    if((*gr)[i][j]->getC()==(*gr)[i][j]->getP()){
                         s->getEdgeMap().erase((*gr)[i][j]);
                         s->getPixelList().remove((*gr)[i][j]);
                     }
@@ -275,7 +277,6 @@ int main(){
                         s->getEdgeMap()[(*gr)[i][j]]->setValue((*gr)[i][j]->getP()-(*gr)[i][j]->getC());
                     }*/
                 }
-                //flow += min((*gr)[i][j]->getC(), (*gr)[i][j]->getP());
         }
     }
     for (int i=0; i<m;i++){
