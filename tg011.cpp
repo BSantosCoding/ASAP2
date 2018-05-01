@@ -1,4 +1,4 @@
-#include <iostream>
+
 #include <list>
 #include <vector>
 #include <utility>
@@ -191,6 +191,8 @@ class Algorithm{
                     }
                 }
             }
+<<<<<<< HEAD
+=======
             if(augmentFlow>0){
                 Pixel* currentPixel = t->getParent();
                 list<Edge*>::iterator it;
@@ -210,6 +212,7 @@ class Algorithm{
                     currentPixel = currentPixel->getParent();
                 }*/
             }
+>>>>>>> master
             return augmentFlow;
         }
 
