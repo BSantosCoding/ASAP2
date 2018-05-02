@@ -5,7 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <limits>
-#include <stack>
+#include <queue>
 
 using namespace std;
 class Edge;
@@ -97,7 +97,7 @@ class Pixel{
     }
 
 Pixel* spred = new Pixel();
-Pixel* startp = new Pixel();
+//Pixel* startp = new Pixel();
 Pixel* s = new Pixel();
 Pixel* t = new Pixel();
 list<Pixel*> L;
@@ -109,7 +109,6 @@ class Graph{
     public:
         Graph(int n, int m){
             spred->setNid(nid); nid++;
-            startp->setNid(nid); nid++;
             s->setNid(nid); nid++;
             t->setNid(nid); nid++;
             graph = new vector<vector<Pixel*> >(m);
@@ -145,42 +144,35 @@ class Edge{
 
 class Algorithm{
     private:
-        int m, n, flow;
+        int flow;
         list<Pixel*> pixelPath;
     public:
-        Algorithm(int n, int m){
-            m=m;
-            n=n;
+        Algorithm(){
             s->setParent(spred);
         }
         inline int ekBfs(){
             pixelPath.clear();
             int augmentFlow = 0;
             for(Pixel* p: L){
-                p->setParent(startp);
+                p->setParent(NULL);
             } 
-            t->setParent(startp);
-            stack<Pixel*> ekBfsQueue = stack<Pixel*>();
-            stack<int> augmentCap = stack<int>();
+            t->setParent(NULL);
+            queue<Pixel*> ekBfsQueue = queue<Pixel*>();
             ekBfsQueue.push(s);
-            augmentCap.push(numeric_limits<int>::max());
             while(!ekBfsQueue.empty()){
-                Pixel* u = ekBfsQueue.top();
-                int cap = augmentCap.top();
+                Pixel* u = ekBfsQueue.front();
                 ekBfsQueue.pop();
-                augmentCap.pop();
                 list<Pixel*> adjLst = u->getPixelList();
                 list<Edge*> weightLst = u->getEdgeMap();
                 list<Pixel*>::iterator it;
                 list<Edge*>::iterator itw;
                 for(it = adjLst.begin(),itw = weightLst.begin(); it!=adjLst.end(), itw!=weightLst.end(); it++, itw++){
-                    if((*itw)->getValue()>0 && (*it)->getParent()->getNid()==startp->getNid()){
+                    if((*itw)->getValue()>0 && (*it)->getParent()==NULL){
                         ekBfsQueue.push((*it));
-                        augmentCap.push(min(cap, (*itw)->getValue()));
                         (*it)->setParent(u);
                         (*it)->setParentEdge((*itw));
                         if((*it)->getNid()==t->getNid()){
-                            augmentFlow = min(cap  , (*itw)->getValue());
+                            augmentFlow = (*itw)->getValue();
                             break;
                         }
                         pixelPath.push_back((*it));
@@ -188,13 +180,23 @@ class Algorithm{
                 }
             }
             if(augmentFlow>0){
-                Pixel* currentPixel = t;
+                Pixel* currentPixel = t->getParent();
+                while(currentPixel->getNid()!=s->getNid()){
+                    augmentFlow = min(augmentFlow, currentPixel->getParentEdge()->getValue());
+                    currentPixel= currentPixel->getParent();
+                }
+                currentPixel = t;
                 while(currentPixel->getNid()!=s->getNid()){
                     currentPixel->getParentEdge()->setValue(currentPixel->getParentEdge()->getValue()-augmentFlow);
                     if(currentPixel->getParentEdge()->getEdge()!=NULL && currentPixel->getParentEdge()!=NULL){
                         currentPixel->getParentEdge()->getEdge()->setValue(currentPixel->getParentEdge()->getEdge()->getValue()+augmentFlow);
                     }
                     currentPixel = currentPixel->getParent();
+                }
+            }
+            if(augmentFlow==0){
+                for(Pixel* p:pixelPath){
+                    p->setId("C");
                 }
             }
             return augmentFlow;
@@ -213,13 +215,6 @@ class Algorithm{
             }
             return flow;
         }
-
-        inline void findCut(){
-            for(Pixel* p:pixelPath){
-                p->setId("C");
-            }
-        }
-
 };
 
 int main(){
@@ -287,9 +282,8 @@ int main(){
         }
     }
 
-    Algorithm* a = new Algorithm(n, m);
+    Algorithm* a = new Algorithm();
     flow += a->EK();
-    a->findCut();
     cout << flow << "\n";
 
     cout << endl;
