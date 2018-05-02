@@ -1,9 +1,9 @@
-
+#include <iostream>
 #include <list>
 #include <vector>
 #include <utility>
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <limits>
 #include <stack>
 
@@ -18,7 +18,8 @@ class Pixel{
         int c;
         int p;
         Pixel* parent;
-        map<Pixel*, Edge*> edgeMap;
+        Edge* parentE;
+        list<Edge*> edgeMap;
         list<Pixel*> pixelList;
         string id = "";
 
@@ -32,58 +33,66 @@ class Pixel{
         int getC();
         int getP();
         int getNid();
+        Edge* getParentEdge();
         Pixel* getParent();
         string getId();
-        map<Pixel*, Edge*> getEdgeMap();
+        list<Edge*> getEdgeMap();
         list<Pixel*> getPixelList();
         void setC(int n);
         void setNid(int n);
         void setP(int n);
+        void setParentEdge(Edge* e);
         void setParent(Pixel* p);
         void setId(string idcp);
-        void addEdge(Edge* edge, Pixel* pixel);
+        void addEdge(Edge* edge);
         void addPixel(Pixel* pixel);
 };
-    int Pixel::getC(){
+    inline int Pixel::getC(){
         return c;
     }
-    int Pixel::getP(){
+    inline int Pixel::getP(){
         return p;
     }
-    Pixel* Pixel::getParent(){
+    inline Edge* Pixel::getParentEdge(){
+        return parentE;
+    }
+    inline Pixel* Pixel::getParent(){
         return parent;
     }
-    int Pixel::getNid(){
+    inline int Pixel::getNid(){
         return nid;
     }
-    string Pixel::getId(){
+    inline string Pixel::getId(){
         return id;
     }
-    map<Pixel*, Edge*> Pixel::getEdgeMap(){
+    inline list<Edge*> Pixel::getEdgeMap(){
         return edgeMap;
     }
-    list<Pixel*> Pixel::getPixelList(){
+    inline list<Pixel*> Pixel::getPixelList(){
         return pixelList;
     }
-    void Pixel::setC(int n){
+    inline void Pixel::setC(int n){
         c=n;
     }
-    void Pixel::setNid(int n){
+    inline void Pixel::setNid(int n){
         nid=n;
     }
-    void Pixel::setP(int n){
+    inline void Pixel::setP(int n){
         p=n;
     }
-    void Pixel::setParent(Pixel* p){
+    inline void Pixel::setParentEdge(Edge* e){
+        parentE=e;
+    }
+    inline void Pixel::setParent(Pixel* p){
         parent=p;
     }
-    void Pixel::setId(string idcp){
+    inline void Pixel::setId(string idcp){
         id=idcp;
     }
-    void Pixel::addEdge(Edge* edge, Pixel* pixel){
-        edgeMap[pixel]=edge;
+    inline void Pixel::addEdge(Edge* edge){
+        edgeMap.push_back(edge);
     }
-    void Pixel::addPixel(Pixel* pixel){
+    inline void Pixel::addPixel(Pixel* pixel){
         pixelList.push_back(pixel);
     }
 
@@ -92,30 +101,20 @@ Pixel* startp = new Pixel();
 Pixel* s = new Pixel();
 Pixel* t = new Pixel();
 list<Pixel*> L;
+int nid = -1;
 
 class Graph{
     private:
         vector<vector<Pixel*> >* graph ;
     public:
         Graph(int n, int m){
-            int nid=-1;
             spred->setNid(nid); nid++;
             startp->setNid(nid); nid++;
             s->setNid(nid); nid++;
             t->setNid(nid); nid++;
-            graph = new vector<vector<Pixel*> >();
-            graph->resize(m);
-            for (int i=0; i<m; i++){
-                graph->at(i).resize(n);
-                for (int j=0; j<n; j++){
-                    Pixel* p = new Pixel();
-                    p->setNid(nid); nid++;
-                    L.push_back(p);
-                    graph->at(i).at(j) = p;
-                }
-            }
+            graph = new vector<vector<Pixel*> >(m);
         }
-        vector<vector<Pixel*> >* getGraph(){
+        inline vector<vector<Pixel*> >* getGraph(){
             return graph;
         }
 };
@@ -130,16 +129,16 @@ class Edge{
             value=val;
         }
 
-        int getValue(){
+        inline int getValue(){
             return value;
         }
-        void setValue(int n){
+        inline void setValue(int n){
             value=n;
         }
-        void setEdge (Edge* ed){
+        inline void setEdge (Edge* ed){
             e=ed;
         }
-        Edge* getEdge(){
+        inline Edge* getEdge(){
             return e;
         }
 };
@@ -148,7 +147,6 @@ class Algorithm{
     private:
         int m, n, flow;
         list<Pixel*> pixelPath;
-        list<Edge*> edgePath;
     public:
         Algorithm(int n, int m){
             m=m;
@@ -156,9 +154,7 @@ class Algorithm{
             s->setParent(spred);
         }
         inline int ekBfs(){
-            edgePath.clear();
             pixelPath.clear();
-            Edge* e;
             int augmentFlow = 0;
             for(Pixel* p: L){
                 p->setParent(startp);
@@ -174,45 +170,33 @@ class Algorithm{
                 ekBfsQueue.pop();
                 augmentCap.pop();
                 list<Pixel*> adjLst = u->getPixelList();
+                list<Edge*> weightLst = u->getEdgeMap();
                 list<Pixel*>::iterator it;
-                for(auto it = adjLst.begin(); it!=adjLst.end(); it++){
-                    e = u->getEdgeMap()[*it];
-                    if(e->getValue()>0 && (*it)->getParent()->getNid()==startp->getNid()){
+                list<Edge*>::iterator itw;
+                for(it = adjLst.begin(),itw = weightLst.begin(); it!=adjLst.end(), itw!=weightLst.end(); it++, itw++){
+                    if((*itw)->getValue()>0 && (*it)->getParent()->getNid()==startp->getNid()){
                         ekBfsQueue.push((*it));
-                        augmentCap.push(min(cap, e->getValue()));
+                        augmentCap.push(min(cap, (*itw)->getValue()));
                         (*it)->setParent(u);
+                        (*it)->setParentEdge((*itw));
                         if((*it)->getNid()==t->getNid()){
-                            augmentFlow = min(cap  , e->getValue());
+                            augmentFlow = min(cap  , (*itw)->getValue());
                             break;
                         }
-                        
-                        edgePath.push_back(e);
                         pixelPath.push_back((*it));
                     }
                 }
             }
-<<<<<<< HEAD
-=======
             if(augmentFlow>0){
-                Pixel* currentPixel = t->getParent();
-                list<Edge*>::iterator it;
-                e->setValue(e->getValue()-augmentFlow);
-                it=edgePath.begin();
-                while(currentPixel->getNid() != s->getNid()){
-                    (*it)->setValue((*it)->getValue()-augmentFlow);
-                    (*it)->getEdge()->setValue((*it)->getEdge()->getValue()+augmentFlow);
-                    it++;
+                Pixel* currentPixel = t;
+                while(currentPixel->getNid()!=s->getNid()){
+                    currentPixel->getParentEdge()->setValue(currentPixel->getParentEdge()->getValue()-augmentFlow);
+                    if(currentPixel->getParentEdge()->getEdge()!=NULL && currentPixel->getParentEdge()!=NULL){
+                        currentPixel->getParentEdge()->getEdge()->setValue(currentPixel->getParentEdge()->getEdge()->getValue()+augmentFlow);
+                    }
                     currentPixel = currentPixel->getParent();
                 }
-                /*
-                while(currentPixel->getNid() != s->getNid()){
-                    currentPixel->getParent()->getEdgeMap()[currentPixel]->setValue(currentPixel->getParent()->getEdgeMap()[currentPixel]->getValue()-augmentFlow);
-                    if (currentPixel->getNid()!=t->getNid() && currentPixel->getParent()->getNid()!=s->getNid())
-                        currentPixel->getEdgeMap()[currentPixel->getParent()]->setValue(currentPixel->getEdgeMap()[currentPixel->getParent()]->getValue()+augmentFlow);
-                    currentPixel = currentPixel->getParent();
-                }*/
             }
->>>>>>> master
             return augmentFlow;
         }
 
@@ -230,7 +214,7 @@ class Algorithm{
             return flow;
         }
 
-        void findCut(){
+        inline void findCut(){
             for(Pixel* p:pixelPath){
                 p->setId("C");
             }
@@ -248,38 +232,28 @@ int main(){
     for (int i=0; i<m;i++){
         for (int j=0; j<n; j++){
                 cin >> aux;
-                (*gr)[i][j]->setP(aux);
-                if(aux!=0){
-                    e1 = new Edge(aux);
-                    s->addEdge(e1, (*gr)[i][j]);
-                    s->addPixel((*gr)[i][j]);
-                } 
+                Pixel* p = new Pixel();
+                p->setNid(nid); nid++;
+                p->setP(aux);
+                L.push_back(p);
+                (*gr)[i].push_back(p);
         }
     }
     for (int i=0; i<m; i++){
         for (int j=0; j<n; j++){
-                cin >> aux;
-                (*gr)[i][j]->setC(aux);
-                if(aux!=0){
-                    e1 = new Edge(aux-(*gr)[i][j]->getP());
-                    (*gr)[i][j]->addEdge(e1, t);
-                    (*gr)[i][j]->addPixel(t);
-                    /*flow += min((*gr)[i][j]->getC(), (*gr)[i][j]->getP());
-                    if((*gr)[i][j]->getC()==(*gr)[i][j]->getP()){
-                        s->getEdgeMap().erase((*gr)[i][j]);
-                        s->getPixelList().remove((*gr)[i][j]);
-                    }
-                    else if((*gr)[i][j]->getC()>(*gr)[i][j]->getP()){
-                        s->getEdgeMap().erase((*gr)[i][j]);
-                        s->getPixelList().remove((*gr)[i][j]);
-                        e1 = new Edge(aux-(*gr)[i][j]->getP());
-                        (*gr)[i][j]->addEdge(e1, t);
-                        (*gr)[i][j]->addPixel(t);
-                    }
-                    else{
-                        s->getEdgeMap()[(*gr)[i][j]]->setValue((*gr)[i][j]->getP()-(*gr)[i][j]->getC());
-                    }*/
-                }
+            cin >> aux;
+            (*gr)[i][j]->setC(aux);
+            flow += min((*gr)[i][j]->getC(), (*gr)[i][j]->getP());
+            if((*gr)[i][j]->getC()>(*gr)[i][j]->getP()){
+                e1 = new Edge((aux-(*gr)[i][j]->getP()));
+                (*gr)[i][j]->addEdge(e1);
+                (*gr)[i][j]->addPixel(t);
+            }
+            else if((*gr)[i][j]->getC()<(*gr)[i][j]->getP()){
+                e1 = new Edge((*gr)[i][j]->getP()-aux);
+                s->addEdge(e1);
+                s->addPixel((*gr)[i][j]);
+            }
         }
     }
     for (int i=0; i<m;i++){
@@ -290,9 +264,9 @@ int main(){
                     e2 = new Edge(aux);
                     e1->setEdge(e2);
                     e2->setEdge(e1);
-                    (*gr)[i][j]->addEdge(e1,(*gr)[i][j+1]);
+                    (*gr)[i][j]->addEdge(e1);
                     (*gr)[i][j]->addPixel((*gr)[i][j+1]);
-                    (*gr)[i][j+1]->addEdge(e2,(*gr)[i][j]);
+                    (*gr)[i][j+1]->addEdge(e2);
                     (*gr)[i][j+1]->addPixel((*gr)[i][j]);
                 }
         }
@@ -303,11 +277,11 @@ int main(){
                 if(aux!=0){
                     e1 = new Edge(aux);
                     e2 = new Edge(aux);
-                    e1->setEdge(e2);
                     e2->setEdge(e1);
-                    (*gr)[i][j]->addEdge(e1,(*gr)[i+1][j]);
+                    e1->setEdge(e2);
+                    (*gr)[i][j]->addEdge(e1);
                     (*gr)[i][j]->addPixel((*gr)[i+1][j]);
-                    (*gr)[i+1][j]->addEdge(e2,(*gr)[i][j]);
+                    (*gr)[i+1][j]->addEdge(e2);
                     (*gr)[i+1][j]->addPixel((*gr)[i][j]);
                 }
         }
